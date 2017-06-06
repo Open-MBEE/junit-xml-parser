@@ -1,0 +1,14 @@
+machine:
+  java:
+    version: oraclejdk8
+
+deployment:
+  release:
+    tag: "/[0-9.]+-(a|b|rc)[0-9]+/"
+    commands:
+      - "./gradlew -PbuildNumber=$CIRCLE_BUILD_NUM -PbuildTag=$CIRCLE_TAG -PartifactoryUrl=$ARTIFACTORY_URL -PartifactoryRepository=$ARTIFACTORY_REPOSITORY -PartifactoryUsername=$ARTIFACTORY_USERNAME -PartifactoryPassword=$ARTIFACTORY_PASSWORD --info artifactoryPublish"
+      - "curl -X POST -u $ARTIFACTORY_USER:$ARTIFACTORY_PASSWORD $ARTIFACTORY_URL/api/plugins/build/promote/snapshotsToBintray/$(cat ./settings.gradle | grep rootProject.name | cut -d \' -f 2)/$CIRCLE_BUILD_NUM?params=releaseVersion=$CIRCLE_TAG -H 'Content-Length: 0' || true"
+  snapshot:
+    branch: "/((release|hotfix|support)/[0-9.]+(-(a|b|rc)[0-9]+)?|master|develop)/"
+    commands:
+      - "./gradlew -PbuildNumber=$CIRCLE_BUILD_NUM -PbuildTag=$CIRCLE_TAG -PartifactoryUrl=$ARTIFACTORY_URL -PartifactoryRepository=$ARTIFACTORY_REPOSITORY -PartifactoryUsername=$ARTIFACTORY_USERNAME -PartifactoryPassword=$ARTIFACTORY_PASSWORD --info artifactoryPublish"

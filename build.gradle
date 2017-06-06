@@ -1,0 +1,86 @@
+group 'org.openmbee'
+version '1.0.0'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.8
+
+String buildTag = project.getProperties().get('buildTag')
+if (buildTag == null || buildTag.isEmpty()) {
+    version += '-SNAPSHOT'
+}
+else if (buildTag != version) {
+    throw new GradleException('Version mismatch.')
+}
+String buildNumber = project.getProperties().getOrDefault('buildNumber', System.currentTimeSeconds());
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath group: 'org.jfrog.buildinfo', name: 'build-info-extractor-gradle', version: '4.4.0'
+    }
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile "org.projectlombok:lombok:1.16.16"
+
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
+    compile group: 'commons-io', name: 'commons-io', version: '2.5'
+
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.12'
+    compile group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.2.11'
+    compile group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.2.11'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.artifactory'
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar {
+                classifier 'sources'
+            }
+            artifact javadocJar {
+                classifier 'javadoc'
+            }
+        }
+    }
+}
+
+artifactory {
+    contextUrl = project.getProperties().get('artifactoryUrl')
+    publish {
+        repository {
+            repoKey = project.getProperties().get('artifactoryRepository')
+            username = project.getProperties().get('artifactoryUsername')
+            password = project.getProperties().get('artifactoryPassword')
+        }
+        defaults {
+            publications('mavenJava')
+        }
+        clientConfig.setIncludeEnvVars(true)
+        if (buildNumber != null && !buildNumber.isEmpty()) {
+            clientConfig.info.setBuildNumber(buildNumber)
+        }
+    }
+}
+artifactoryPublish.dependsOn(assemble, sourcesJar, javadocJar)
