@@ -1,4 +1,4 @@
-group 'org.openmbee'
+group 'org.openmbee.junit'
 version '1.0.0'
 
 apply plugin: 'java'
