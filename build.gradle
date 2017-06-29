@@ -7,11 +7,11 @@ apply plugin: 'idea'
 sourceCompatibility = 1.8
 
 String buildTag = project.getProperties().get('buildTag')
-if (buildTag == null || buildTag.isEmpty()) {
-    version += '-SNAPSHOT'
-}
-else if (buildTag != version) {
+if (buildTag != null && buildTag != version) {
     throw new GradleException('Version mismatch.')
+}
+if (buildTag == null || buildTag.isEmpty() || project.getProperties().getOrDefault('artifactoryRepository', '').toLowerCase().contains('snapshot')) {
+    version += '-SNAPSHOT'
 }
 String buildNumber = project.getProperties().getOrDefault('buildNumber', System.currentTimeSeconds());
 
