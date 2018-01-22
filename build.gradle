@@ -7,7 +7,7 @@ apply plugin: 'idea'
 sourceCompatibility = 1.8
 
 String buildTag = project.getProperties().get('buildTag')
-if (buildTag != null && buildTag != version) {
+if (buildTag != null && !buildTag.isEmpty() && buildTag != version) {
     throw new GradleException('Version mismatch.')
 }
 if (buildTag == null || buildTag.isEmpty() || project.getProperties().getOrDefault('artifactoryRepository', '').toLowerCase().contains('snapshot')) {
@@ -77,7 +77,6 @@ artifactory {
         defaults {
             publications('mavenJava')
         }
-        clientConfig.setIncludeEnvVars(true)
         if (buildNumber != null && !buildNumber.isEmpty()) {
             clientConfig.info.setBuildNumber(buildNumber)
         }
